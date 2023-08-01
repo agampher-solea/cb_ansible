@@ -7,6 +7,7 @@
 
 
   vars:
+    delegate_target: "localhost"  # Set to "localhost" to use delegate_to when running on localhost, otherwise set to empty string ""
     # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
     couchbase_version: 7.2.0*
     admin_pw: Changeit
