@@ -1,0 +1,43 @@
+# deploy_couchbase.yml
+
+- name: Deploy Couchbase Server
+  hosts: couchbase_servers  # Replace with the appropriate host/group name from your inventory
+  gather_facts: true
+  become: true
+
+
+  vars:
+    # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
+    couchbase_version: 7.2.0*
+    admin_pw: 3Bmchtr
+
+    # Define dynamic lists of users, buckets, and collections
+    couchbase_users:
+      - username: testing_ansible 
+        password: testing1234
+        roles: admin
+
+    couchbase_buckets:
+      - name: beyond
+        memory_quota: 512
+        type: magma
+        index_memory_quota: 256
+        query_memory_quota: 256
+
+    couchbase_collections:
+      - name: system
+        scope: cachelogs
+      - name: system
+        scope: cachesettings
+      - name: user
+        scope: override
+      - name: user
+        scope: permissions
+      - name: etl
+        scope: pricenodes
+      - name: pnl
+        scope: daily
+
+  roles:
+    - couchbase_server
+

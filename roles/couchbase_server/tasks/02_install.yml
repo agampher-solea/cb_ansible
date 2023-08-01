@@ -1,0 +1,28 @@
+# tasks/main.yml
+
+- name: Download Couchbase repository package
+  get_url:
+    url: https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
+    dest: /tmp/couchbase-release-1.0-amd64.deb
+
+- name: Install Couchbase repository package
+  become: true
+  command: dpkg -i /tmp/couchbase-release-1.0-amd64.deb
+
+- name: Update APT cache
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Print available Couchbase versions
+  become: true
+  shell: apt list -a couchbase-server
+  register: couchbase_versions
+
+- name: Display Couchbase versions
+  debug:
+    var: couchbase_versions.stdout
+
+- name: Install Couchbase server package
+  become: true
+  shell: apt-get install -y "couchbase-server={{ couchbase_version }}"

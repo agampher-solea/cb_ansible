@@ -1,0 +1,8 @@
+- name: Prepare Ubuntu
+  include_tasks: 01_prepare.yml
+- name: Install Couchbase Server
+  include_tasks: 02_install.yml
+- name: Reset Admin Passowrd
+  include_tasks: 03_reset_admin_pw.yml
+- name: Init Cluster
+  include_tasks: 04_init_cluster.yml
