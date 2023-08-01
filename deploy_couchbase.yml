@@ -9,7 +9,7 @@
   vars:
     # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
     couchbase_version: 7.2.0*
-    admin_pw: 3Bmchtr
+    admin_pw: Changeit
 
     # Define dynamic lists of users, buckets, and collections
     couchbase_users:
