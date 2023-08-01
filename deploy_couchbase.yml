@@ -10,6 +10,12 @@
     # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
     couchbase_version: 7.2.0*
     admin_pw: Changeit
+    node_services:
+      node1: "data,query,index"  # Services to be installed on server 1
+      node2: "data,query,index"  # Services to be installed on server 2
+      node3: "data,query,index"  # Services to be installed on server 3
+    cluster_ramsize: 1024  # Cluster RAM size in MB (can be overridden)
+    cluster_index_ramsize: 256  # Cluster Index RAM size in MB (can be overridden)
 
     # Define dynamic lists of users, buckets, and collections
     couchbase_users:
