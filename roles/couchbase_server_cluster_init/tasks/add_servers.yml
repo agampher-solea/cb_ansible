@@ -1,0 +1,17 @@
+#The retry sucks here - There is something with the cli that doesn't like rapidly adding servers - so we have to retry until all return 'Node is already part of the cluster'
+- name: Add nodes to the Couchbase cluster
+  command: >
+      /opt/couchbase/bin/couchbase-cli server-add
+        --cluster={{ groups['couchbase_servers'][0] }}
+        --username=Administrator
+        --password={{ admin_pw }}
+        --server-add={{ inventory_hostname }}
+        --services={{ node_services[inventory_hostname] | default('data') }}
+        --server-add-username=Administrator
+        --server-add-password={{ admin_pw }}
+  when: inventory_hostname != groups['couchbase_servers'][0]
+  register: server_add_result
+  failed_when: server_add_result.rc == 1 and "Node is already part of cluster" not in server_add_result.stdout
+  retries: 3
+  delay: 3
+  until: "'Node is already part of cluster' in server_add_result.stdout"

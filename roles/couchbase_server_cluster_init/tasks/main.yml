@@ -1,0 +1,7 @@
+- name: Initialize Cluster First time
+  include_tasks: "{{ item }}"
+  loop:
+    - reset_admin_pw.yml
+    - init_cluster.yml
+    - add_servers.yml
+    - rebalance.yml

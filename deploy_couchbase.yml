@@ -45,5 +45,7 @@
         scope: daily
 
   roles:
-    - couchbase_server
+    - couchbase_server_prep
+    - couchbase_server_install
+    - couchbase_server_cluster_init
 

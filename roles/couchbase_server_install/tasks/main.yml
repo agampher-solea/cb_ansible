@@ -1,0 +1,2 @@
+- name: Install Couchbase Server
+  include_tasks: install.yml

@@ -1,0 +1,10 @@
+# roles/couchbase_server/defaults/main.yml
+
+
+# defaults file for couchbase_prep
+ntp_package: ntp
+swappiness_value: 0
+ulimit_nofile_soft: 40960
+ulimit_nofile_hard: 40960
+ulimit_core_soft: unlimited
+ulimit_core_hard: unlimited

@@ -1,3 +1,0 @@
-- name: Create or modify Couchbase users
-  command: /opt/couchbase/bin/couchbase-cli user-manage --username=admin --password={{ admin_pw }} --set --rbac-username={{ item.username }} --rbac-password={{ item.password }} --roles={{ item.roles }}
-  loop: "{{ couchbase_users }}"
