@@ -1,2 +1,2 @@
-- name: Prepare Ubuntu for couchbase install
+- name: Prep server for couchbase
   include_tasks: prepare.yml

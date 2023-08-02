@@ -12,6 +12,6 @@
   when: inventory_hostname != groups['couchbase_servers'][0]
   register: server_add_result
   failed_when: server_add_result.rc == 1 and "Node is already part of cluster" not in server_add_result.stdout
-  retries: 3
-  delay: 3
+  retries: 10
+  delay: 5
   until: "'Node is already part of cluster' in server_add_result.stdout"
