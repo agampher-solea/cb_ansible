@@ -1,32 +1,43 @@
 # roles/couchbase_cluster/tasks/configure_couchbase_cluster.yml
 
-- name: Gather FQDN of node1
-  shell: "hostname -f"
-  register: fqdn_result
-  when: inventory_hostname == groups['couchbase_servers'][0]
-
 - name: Initialize Couchbase cluster on node1
   command: >
-    /opt/couchbase/bin/couchbase-cli cluster-init
-    --cluster={{ fqdn_result.stdout }}
-    --cluster-username=admin
-    --cluster-password={{ admin_pw }}
-    --services={{ node_services[inventory_hostname] | default('data,index,query') }}
-    --cluster-ramsize={{ cluster_ramsize | default('1024') }}
-    --cluster-index-ramsize={{ cluster_index_ramsize | default('256') }}
-    --index-storage-setting=memopt
+      /opt/couchbase/bin/couchbase-cli cluster-init 
+        --cluster={{ inventory_hostname }} 
+        --cluster-username=Administrator 
+        --cluster-password={{ admin_pw }} 
+        --services={{ node_services[inventory_hostname] | default('data,index,query') }} 
+        --cluster-ramsize={{ cluster_ramsize | default('1024') }} 
+        --cluster-index-ramsize={{ cluster_index_ramsize | default('256') }} 
+        --index-storage-setting=memopt 
   when: inventory_hostname == groups['couchbase_servers'][0]
+  register: cluster_init_result
+  failed_when: "cluster_init_result.rc == 1 and 'ERROR: Cluster is already initialized, use setting-cluster to change settings' not in cluster_init_result.stdout"
 
+#The retry sucks here - There is something with the cli that doesn't like rapidly adding servers - so we have to retry until all return 'Node is already part of the cluster'
 - name: Add nodes to the Couchbase cluster
   command: >
-    /opt/couchbase/bin/couchbase-cli server-add
-    --cluster={{ fqdn_result.stdout }}
-    --user=admin
-    --password={{ admin_pw }}
-    --server-add={{ hostvars[item].ansible_default_ipv4.address }}
-    --services={{ node_services[inventory_hostname] | default('data') }}
-    --server-add-username={{ node_username | default('admin') }}
-    --server-add-password={{ node_password | default(admin_pw) }}
-  loop: "{{ groups['couchbase_servers'][1:] }}"
+      /opt/couchbase/bin/couchbase-cli server-add 
+        --cluster={{ groups['couchbase_servers'][0] }} 
+        --username=Administrator 
+        --password={{ admin_pw }} 
+        --server-add={{ inventory_hostname }} 
+        --services={{ node_services[inventory_hostname] | default('data') }} 
+        --server-add-username=Administrator 
+        --server-add-password={{ admin_pw }}
   when: inventory_hostname != groups['couchbase_servers'][0]
+  register: server_add_result
+  failed_when: server_add_result.rc == 1 and "Node is already part of cluster" not in server_add_result.stdout
+  retries: 3
+  delay: 3
+  until: "'Node is already part of cluster' in server_add_result.stdout"
 
+- name: Kick off rebalance on master node
+  command: >
+      /opt/couchbase/bin/couchbase-cli rebalance
+        --cluster={{ inventory_hostname }}
+        --username=Administrator
+        --password={{ admin_pw }}
+  when: inventory_hostname == groups['couchbase_servers'][0]
+  register: cluster_rebalance_result
+  #failed_when: "cluster_rebalance_result.rc == 1 and 'ERROR: Cluster is already initialized, use setting-cluster to change settings' not in cluster_rebalance_result.stdout"

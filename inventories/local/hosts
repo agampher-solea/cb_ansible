@@ -1,4 +1,4 @@
 [couchbase_servers]
-node1 ansible_host=192.168.50.11 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node1/virtualbox/private_key
-node2 ansible_host=192.168.50.12 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node2/virtualbox/private_key
-node3 ansible_host=192.168.50.13 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node3/virtualbox/private_key
+node1.example.com ansible_host=192.168.50.11 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node1/virtualbox/private_key
+node2.example.com ansible_host=192.168.50.12 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node2/virtualbox/private_key
+node3.example.com ansible_host=192.168.50.13 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./.vagrant/machines/node3/virtualbox/private_key

@@ -1,10 +1,7 @@
 - name: Reset Administrator password
   shell: >
-    curl -X POST -u Administrator:couchbase \
-    http://localhost:8091/settings/web \
+    curl -X POST -u Administrator:password \
+    http://127.0.0.1:8091/settings/web \
     -d password=new_password
   vars:
     new_password: "{{ admin_pw }}"  # Replace with the new Administrator password
-  changed_when: false  # To avoid false positives in Ansible report
-  ignore_errors: yes  # To handle non-zero exit code (expected if password has already been changed)
-  run_once: true

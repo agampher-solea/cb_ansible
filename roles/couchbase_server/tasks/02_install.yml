@@ -26,3 +26,11 @@
 - name: Install Couchbase server package
   become: true
   shell: apt-get install -y "couchbase-server={{ couchbase_version }}"
+
+- name: Wait for couchbase to be ready
+  wait_for:
+    port: 8091
+    host: 127.0.0.1
+    connect_timeout: 3
+    delay: 3
+    timeout: 30
