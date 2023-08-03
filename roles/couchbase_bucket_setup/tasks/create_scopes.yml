@@ -1,0 +1,69 @@
+- name: Create Scopes
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes"
+    method: POST
+    user: Administrator
+    password: "{{ admin_pw }}"
+    body_format: form-urlencoded
+    body:
+      name: "{{ collection_item.parent_scope }}"
+  register: create_scope_result
+  loop: "{{ couchbase_buckets | subelements('collections') }}"
+  loop_control:
+    loop_var: loop_vars
+    label: "{{ loop_vars.0.name }} - {{ loop_vars.1.parent_scope }}"
+  vars:
+    bucket_item: "{{ loop_vars.0 }}"
+    collection_item: "{{ loop_vars.1 }}"
+  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  failed_when: 
+    - create_scope_result.status != 200 
+    - "'already exists' not in create_scope_result.json.errors['_']"
+
+
+- name: Create Collections
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections"
+    method: POST
+    user: Administrator
+    password: "{{ admin_pw }}"
+    body_format: form-urlencoded
+    body:
+      name: "{{ collection_item.name }}"
+      maxTTL: "{{ collection_item.maxTTL }}"
+      history: "{{ collection_item.history | default('false') }}"
+  register: create_collection_result
+  loop: "{{ couchbase_buckets | subelements('collections') }}"
+  loop_control:
+    loop_var: loop_vars
+    label: "{{ loop_vars.0.name }} - {{ loop_vars.1.parent_scope }} - {{ loop_vars.1.name }}"
+  vars:
+    bucket_item: "{{ loop_vars.0 }}"
+    collection_item: "{{ loop_vars.1 }}"
+  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  failed_when: 
+    - create_collection_result.status != 200 
+    - "'already exists' not in create_collection_result.json.errors['_']"
+
+
+- name: Update Collections
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections/{{ collection_item.name }}"
+    method: PATCH
+    user: Administrator
+    password: "{{ admin_pw }}"
+    body_format: form-urlencoded
+    body:
+      history: "{{ collection_item.history | default('true') }}"
+  register: update_collection_result
+  loop: "{{ couchbase_buckets | subelements('collections') }}"
+  loop_control:
+    loop_var: loop_vars
+    label: "{{ loop_vars.0.name }} - {{ loop_vars.1.parent_scope }} - {{ loop_vars.1.name }}"
+  vars:
+    bucket_item: "{{ loop_vars.0 }}"
+    collection_item: "{{ loop_vars.1 }}"
+  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  failed_when: 
+  - update_collection_result.status != 200 
+  - "'already exists' not in update_collection_result.json.errors['_']"

@@ -33,26 +33,37 @@
         bucket_type: couchbase
         bucket_ramsize: 500
         bucket_replica: 2
-        compression_mode: "off"
+        compression_mode: "active"
         bucket_priority: high
-
-    couchbase_collections:
-      - name: system
-        scope: cachelogs
-      - name: system
-        scope: cachesettings
-      - name: user
-        scope: override
-      - name: user
-        scope: permissions
-      - name: etl
-        scope: pricenodes
-      - name: pnl
-        scope: daily
+        collections:
+          - parent_scope: etl
+            name: pricenodes
+            maxTTL: 0
+            history: "false"
+          - parent_scope: pnl
+            name: daily
+            maxTTL: 0
+            history: "false"
+          - parent_scope: system
+            name: cachelogs
+            maxTTL: 864000
+            history: "false"
+          - parent_scope: system
+            name: cachesettings
+            maxTTL: 0
+            history: "false"
+          - parent_scope: user
+            name: override
+            maxTTL: 0
+            history: "false"
+          - parent_scope: user
+            name: permissions
+            maxTTL: 0
+            history: "false"
 
   roles:
-    # - couchbase_server_prep
-    # - couchbase_server_install
-    # - couchbase_server_cluster_init
+    - couchbase_server_prep
+    - couchbase_server_install
+    - couchbase_server_cluster_init
     - couchbase_bucket_setup
 

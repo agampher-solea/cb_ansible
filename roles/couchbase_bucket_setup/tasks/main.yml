@@ -1,0 +1,7 @@
+#main.yml
+
+- name: Create couchbase bucket(s)
+  include_tasks: create_or_update_buckets.yml
+
+- name: Create couchbase scope(s)
+  include_tasks: create_scopes.yml

@@ -1,0 +1,9 @@
+couchbase_buckets:
+  - name: beyond
+    memory_quota: 512
+    storage_backend: magma
+    bucket_type: couchbase
+    bucket_ramsize: 512
+    bucket_replica: 2
+    compression_mode: active
+    bucket_priority: high

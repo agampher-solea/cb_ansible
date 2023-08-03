@@ -1,0 +1,96 @@
+---
+- name: Get Bucket Info from API
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ item.name }}"
+    method: GET
+    user: "Administrator"
+    password: "{{ admin_pw }}"
+  register: bucket_list_result
+  delegate_to: "{{ groups['couchbase_servers'][0] }}"
+  when: inventory_hostname == groups['couchbase_servers'][0]
+  loop: "{{ couchbase_buckets }}"
+  run_once: true
+  failed_when: bucket_list_result.status not in [200, 404]
+
+- name: Set Default Bucket Info
+  set_fact:
+    bucket_info: {}
+  when: inventory_hostname == groups['couchbase_servers'][0]
+  run_once: true
+  changed_when: false
+
+- name: Process Bucket Info
+  set_fact:
+    bucket_info: "{{ bucket_info | default({}) | combine({item.json.name: {}}) }}"
+  when: inventory_hostname == groups['couchbase_servers'][0] and item.json is defined
+  loop: "{{ bucket_list_result.results | default([]) }}"
+  run_once: true
+  changed_when: false
+
+- name: Create Buckets
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets"
+    method: POST
+    user: "Administrator"
+    password: "{{ admin_pw }}"
+    body_format: form-urlencoded
+    body:
+      name: "{{ item.name }}"
+      bucketType: "{{ item.bucket_type }}"
+      ramQuota: "{{ item.memory_quota }}"
+      storageBackend: "{{ item.storage_backend }}"
+      evictionPolicy: "{{ item.eviction_policy | default('valueOnly') }}"
+      durabilityMinLevel: "{{ item.durability_min_level | default('none') }}"
+      threadsNumber: "{{ item.threads_number | default(3) }}"
+      replicaNumber: "{{ item.replica_number | default(1) }}"
+      compressionMode: "{{ item.compression_mode | default('off') }}"
+      maxTTL: "{{ item.max_ttl | default(0) }}"
+      replicaIndex: "{{ item.replica_index | default(0) }}"
+      conflictResolutionType: "{{ item.conflict_resolution_type | default('seqno') }}"
+      flushEnabled: "{{ item.flush_enabled | default(0) }}"
+      magmaSeqTreeDataBlockSize: "{{ item.magma_seq_tree_data_block_size | default(4096) }}"
+      historyRetentionCollectionDefault: "{{ (item.history_retention_collection_default | default(false)) | ternary('true', 'false') }}"
+      historyRetentionBytes: "{{ item.history_retention_bytes | default(0) }}"
+      historyRetentionSeconds: "{{ item.history_retention_seconds | default(0) }}"
+      autoCompactionDefined: "{{ (item.auto_compaction_defined | default(true)) | ternary('true', 'false') }}"
+      parallelDBAndViewCompaction: "{{ item.parallel_db_and_view_compaction | default(true) }}"
+  register: bucket_creation_result
+  failed_when: bucket_creation_result.status not in [200, 202]
+  when: inventory_hostname == groups['couchbase_servers'][0] and item.name not in bucket_info
+  loop: "{{ couchbase_buckets }}"
+  loop_control:
+    loop_var: item
+
+- name: Update Existing Buckets
+  uri:
+    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ item.name }}"
+    method: POST
+    user: "Administrator"
+    password: "{{ admin_pw }}"
+    body_format: form-urlencoded
+    body:
+      name: "{{ item.name }}"
+      bucketType: "{{ item.bucket_type }}"
+      ramQuota: "{{ item.memory_quota }}"
+      storageBackend: "{{ item.storage_backend }}"
+      evictionPolicy: "{{ item.eviction_policy | default('valueOnly') }}"
+      durabilityMinLevel: "{{ item.durability_min_level | default('none') }}"
+      threadsNumber: "{{ item.threads_number | default(3) }}"
+      replicaNumber: "{{ item.replica_number | default(1) }}"
+      compressionMode: "{{ item.compression_mode | default('off') }}"
+      maxTTL: "{{ item.max_ttl | default(0) }}"
+      replicaIndex: "{{ item.replica_index | default(0) }}"
+      flushEnabled: "{{ item.flush_enabled | default(0) }}"
+      magmaSeqTreeDataBlockSize: "{{ item.magma_seq_tree_data_block_size | default(4096) }}"
+      historyRetentionCollectionDefault: "{{ (item.history_retention_collection_default | default(false)) | ternary('true', 'false') }}"
+      historyRetentionBytes: "{{ item.history_retention_bytes | default(0) }}"
+      historyRetentionSeconds: "{{ item.history_retention_seconds | default(0) }}"
+      autoCompactionDefined: "{{ (item.auto_compaction_defined | default(true)) | ternary('true', 'false') }}"
+      parallelDBAndViewCompaction: "{{ item.parallel_db_and_view_compaction | default(true) }}"
+  register: bucket_creation_result
+  failed_when: bucket_creation_result.status not in [200, 202]
+  when: inventory_hostname == groups['couchbase_servers'][0] and item.name in bucket_info
+  loop: "{{ couchbase_buckets }}"
+  loop_control:
+    loop_var: item
+
