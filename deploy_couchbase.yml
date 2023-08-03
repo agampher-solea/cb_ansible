@@ -8,7 +8,7 @@
 
   vars:
     # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
-    couchbase_version: 7.2.0*
+    couchbase_version: 7.2.0-5325-1
     admin_pw: Changeit
     node_services:
       node1.example.com: "data,query,index"  # Services to be installed on server 1
@@ -28,10 +28,13 @@
 
     couchbase_buckets:
       - name: beyond
-        memory_quota: 512
-        type: magma
-        index_memory_quota: 256
-        query_memory_quota: 256
+        memory_quota: 1024
+        storage_backend: magma
+        bucket_type: couchbase
+        bucket_ramsize: 500
+        bucket_replica: 2
+        compression_mode: "off"
+        bucket_priority: high
 
     couchbase_collections:
       - name: system
@@ -48,7 +51,8 @@
         scope: daily
 
   roles:
-    - couchbase_server_prep
-    - couchbase_server_install
-    - couchbase_server_cluster_init
+    # - couchbase_server_prep
+    # - couchbase_server_install
+    # - couchbase_server_cluster_init
+    - couchbase_bucket_setup
 

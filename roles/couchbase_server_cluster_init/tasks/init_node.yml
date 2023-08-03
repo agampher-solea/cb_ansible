@@ -1,11 +1,20 @@
-# Note - if you try to prettify this code by adding line breaks, it will cause the command to become malfomed
-# it is formatted like this for a reason :(
+
+- name: Check if the node is part of a cluster
+  command: >
+    /opt/couchbase/bin/couchbase-cli server-list
+    --cluster={{ groups['couchbase_servers'][0] }}
+    --username=Administrator
+    --password={{ admin_pw }}
+  register: server_list_result
+  changed_when: false
+
 - name: Couchbase CLI node-init -- Pre cluster-init
   command: >
     /opt/couchbase/bin/couchbase-cli node-init
       --cluster={{ inventory_hostname }}
       --username=Administrator
       --password={{ admin_pw }}
+      --node-init-hostname={{ inventory_hostname }}
       {% set services = node_services[inventory_hostname].split(',') %}
       {% if 'index' in services %}
       --node-init-index-path={{ node_service_paths['index']|trim }}
@@ -19,7 +28,8 @@
       {% if 'eventing' in services %}
       --node-init-eventing-path={{ node_service_paths['eventing']|trim  }}
       {% endif %}
-  register: init_node_result    
+  when: inventory_hostname not in server_list_result.stdout
+  register: init_node_result
   retries: 10
   delay: 5
   until: init_node_result.rc == 0
