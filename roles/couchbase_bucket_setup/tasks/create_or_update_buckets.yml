@@ -1,35 +1,38 @@
 ---
 - name: Get Bucket Info from API
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ item.name }}"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets/{{ item.name }}"
     method: GET
     user: "Administrator"
     password: "{{ admin_pw }}"
   register: bucket_list_result
-  delegate_to: "{{ groups['couchbase_servers'][0] }}"
-  when: inventory_hostname == groups['couchbase_servers'][0]
-  loop: "{{ couchbase_buckets }}"
+  delegate_to: "{{ play_hosts[0] }}"
   run_once: true
+  loop: "{{ couchbase_buckets }}"
   failed_when: bucket_list_result.status not in [200, 404]
 
 - name: Set Default Bucket Info
   set_fact:
     bucket_info: {}
-  when: inventory_hostname == groups['couchbase_servers'][0]
+  delegate_to: "{{ play_hosts[0] }}"
   run_once: true
   changed_when: false
+  no_log: true
 
 - name: Process Bucket Info
   set_fact:
     bucket_info: "{{ bucket_info | default({}) | combine({item.json.name: {}}) }}"
-  when: inventory_hostname == groups['couchbase_servers'][0] and item.json is defined
+  when: item.json is defined
+  delegate_to: "{{ play_hosts[0] }}"
   loop: "{{ bucket_list_result.results | default([]) }}"
   run_once: true
   changed_when: false
+  no_log: true
+
 
 - name: Create Buckets
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets"
     method: POST
     user: "Administrator"
     password: "{{ admin_pw }}"
@@ -56,14 +59,16 @@
       parallelDBAndViewCompaction: "{{ item.parallel_db_and_view_compaction | default(true) }}"
   register: bucket_creation_result
   failed_when: bucket_creation_result.status not in [200, 202]
-  when: inventory_hostname == groups['couchbase_servers'][0] and item.name not in bucket_info
+  when: item.name not in bucket_info
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"  
   loop: "{{ couchbase_buckets }}"
   loop_control:
     loop_var: item
 
 - name: Update Existing Buckets
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ item.name }}"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets/{{ item.name }}"
     method: POST
     user: "Administrator"
     password: "{{ admin_pw }}"
@@ -89,7 +94,9 @@
       parallelDBAndViewCompaction: "{{ item.parallel_db_and_view_compaction | default(true) }}"
   register: bucket_creation_result
   failed_when: bucket_creation_result.status not in [200, 202]
-  when: inventory_hostname == groups['couchbase_servers'][0] and item.name in bucket_info
+  when: item.name in bucket_info
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"
   loop: "{{ couchbase_buckets }}"
   loop_control:
     loop_var: item

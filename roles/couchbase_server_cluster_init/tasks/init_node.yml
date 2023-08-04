@@ -2,7 +2,7 @@
 - name: Check if the node is part of a cluster
   command: >
     /opt/couchbase/bin/couchbase-cli server-list
-    --cluster={{ groups['couchbase_servers'][0] }}
+    --cluster={{ play_hosts[0] }}
     --username=Administrator
     --password={{ admin_pw }}
   register: server_list_result

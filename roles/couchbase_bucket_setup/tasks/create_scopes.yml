@@ -1,6 +1,6 @@
 - name: Create Scopes
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes"
     method: POST
     user: Administrator
     password: "{{ admin_pw }}"
@@ -15,15 +15,17 @@
   vars:
     bucket_item: "{{ loop_vars.0 }}"
     collection_item: "{{ loop_vars.1 }}"
-  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  when: inventory_hostname == play_hosts[0] and bucket_item.collections is defined
   failed_when: 
     - create_scope_result.status != 200 
     - "'already exists' not in create_scope_result.json.errors['_']"
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"
 
 
 - name: Create Collections
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections"
     method: POST
     user: Administrator
     password: "{{ admin_pw }}"
@@ -40,15 +42,16 @@
   vars:
     bucket_item: "{{ loop_vars.0 }}"
     collection_item: "{{ loop_vars.1 }}"
-  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  when: inventory_hostname == play_hosts[0] and bucket_item.collections is defined
   failed_when: 
     - create_collection_result.status != 200 
     - "'already exists' not in create_collection_result.json.errors['_']"
-
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"
 
 - name: Update Collections
   uri:
-    url: "http://{{ groups['couchbase_servers'][0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections/{{ collection_item.name }}"
+    url: "http://{{ play_hosts[0] }}:8091/pools/default/buckets/{{ bucket_item.name }}/scopes/{{ collection_item.parent_scope }}/collections/{{ collection_item.name }}"
     method: PATCH
     user: Administrator
     password: "{{ admin_pw }}"
@@ -63,7 +66,9 @@
   vars:
     bucket_item: "{{ loop_vars.0 }}"
     collection_item: "{{ loop_vars.1 }}"
-  when: inventory_hostname == groups['couchbase_servers'][0] and bucket_item.collections is defined
+  when: bucket_item.collections is defined
   failed_when: 
   - update_collection_result.status != 200 
   - "'already exists' not in update_collection_result.json.errors['_']"
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"

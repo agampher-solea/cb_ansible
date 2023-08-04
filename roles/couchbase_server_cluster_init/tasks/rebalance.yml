@@ -4,6 +4,6 @@
         --cluster={{ inventory_hostname }}
         --username=Administrator
         --password={{ admin_pw }}
-  when: inventory_hostname == groups['couchbase_servers'][0]
+  delegate_to: "{{ play_hosts[0] }}"
+  run_once: true
   register: cluster_rebalance_result
-  #failed_when: "cluster_rebalance_result.rc == 1 and 'ERROR: Cluster is already initialized, use setting-cluster to change settings' not in cluster_rebalance_result.stdout"

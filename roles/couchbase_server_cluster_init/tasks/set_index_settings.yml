@@ -1,0 +1,15 @@
+- name: Set Couchbase GSI settings
+  uri:
+    url: "http://{{ play_hosts[0] }}:8091/settings/indexes"
+    method: POST
+    user: Administrator
+    password: "{{ admin_pw }}"
+    body:
+      storageMode: "{{ index_settings.storage_mode }}"
+      numReplica: "{{ index_settings.replicas }}"
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+    status_code: 200
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"

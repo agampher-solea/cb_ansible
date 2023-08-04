@@ -1,0 +1,14 @@
+- name: Set memory quotas
+  uri:
+    url: "http://{{ play_hosts[0] }}:8091/pools/default"
+    method: POST
+    user: "Administrator"
+    password: "{{ admin_pw }}"
+    force_basic_auth: yes
+    body_format: form-urlencoded
+    body:
+      memoryQuota: "{{ memory_quota }}"
+      indexMemoryQuota: "{{ index_memory_quota }}"
+    status_code: 200
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"

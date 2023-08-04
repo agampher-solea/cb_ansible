@@ -1,7 +1,21 @@
-- name: Reset Administrator password
+# note we want this to happen on every node so that pre init all the nodes passwords are normalized. 
+- name: Check Administrator password
+  shell: >
+    curl -X POST -u Administrator:{{ admin_pw }} \
+    http://127.0.0.1:8091/settings/web \
+    -d password=new_password
+  vars:
+    new_password: "{{ admin_pw }}"  # Replace with the new Administrator password
+  no_log: true
+  changed_when: false
+  register: password_check
+
+
+- name: Reset default Administrator password
   shell: >
     curl -X POST -u Administrator:password \
     http://127.0.0.1:8091/settings/web \
     -d password=new_password
   vars:
     new_password: "{{ admin_pw }}"  # Replace with the new Administrator password
+  changed_when: password_check.rc != 0

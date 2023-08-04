@@ -1,0 +1,21 @@
+---
+- name: Create Indexes
+  uri:
+    url: "http://{{ play_hosts[0] }}:8093/query/service"
+    method: POST
+    user: Administrator
+    password: "{{ admin_pw }}"
+    headers:
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      statement: "{{ item.query }} WITH { \"defer_build\":true }"
+  delegate_to: "{{ play_hosts[0] }}"
+  run_once: true
+  loop: "{{ indexes }}"
+  register: index_creation_results
+
+- name: debug 
+  debug:
+    var: index_creation_results
+

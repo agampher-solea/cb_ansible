@@ -2,16 +2,17 @@
 - name: Add nodes to the Couchbase cluster
   command: >
       /opt/couchbase/bin/couchbase-cli server-add
-        --cluster={{ groups['couchbase_servers'][0] }}
+        --cluster={{ play_hosts[0] }}
         --username=Administrator
         --password={{ admin_pw }}
         --server-add={{ inventory_hostname }}
         --services={{ node_services[inventory_hostname] | default('data') }}
         --server-add-username=Administrator
         --server-add-password={{ admin_pw }}
-  when: inventory_hostname != groups['couchbase_servers'][0]
+  when: inventory_hostname != play_hosts[0]
   register: server_add_result
   failed_when: server_add_result.rc == 1 and "Node is already part of cluster" not in server_add_result.stdout
+  changed_when: server_add_result.rc == 0
   retries: 10
   delay: 5
   until: "'Node is already part of cluster' in server_add_result.stdout"

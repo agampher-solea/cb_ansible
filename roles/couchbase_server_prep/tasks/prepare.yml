@@ -8,18 +8,6 @@
     state: latest
   become: true
 
-- name: Install necessary software packages
-  apt:
-    name: "{{ item }}"
-    state: present
-  become: true
-  loop:
-    - openssl
-    - libssl1.1  # Use libssl1.0.0 for Ubuntu 16.04 or older
-    - wget
-    - gnupg
-    - curl
-    - python3-httplib2  # Assuming you're using Python3
 
 - name: Configure swappiness
   sysctl:
@@ -44,12 +32,15 @@
       [Install]
       WantedBy=multi-user.target
     mode: '0644'
+    force: no #This will prevent this task from showing as changed if we are not - in fact - changing anything
   become: true
+  register: disable_thp_result
 
 - name: Reload systemd manager configuration
   systemd:
     daemon_reload: yes
   become: true
+  changed_when: disable_thp_result.changed
 
 - name: Enable and start the service
   systemd:
@@ -57,10 +48,18 @@
     enabled: yes
     state: started
   become: true
+  changed_when: disable_thp_result.changed
 
-- name: Install gnupg
-  apt:
-    name: gnupg
-    state: present
-  become: true
-
+- name: Set ulimits for Couchbase
+  pam_limits:
+    domain: couchbase
+    limit_type: "{{ item.limit_type }}"
+    limit_item: "{{ item.limit_item }}"
+    value: 40960
+  with_items:
+    - { limit_type: 'soft', limit_item: 'nofile' }
+    - { limit_type: 'hard', limit_item: 'nofile' }
+    - { limit_type: 'soft', limit_item: 'nproc' }
+    - { limit_type: 'hard', limit_item: 'nproc' }
+  become: yes
+  run_once: true

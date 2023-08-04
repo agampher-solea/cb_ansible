@@ -5,29 +5,38 @@
     url: https://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-amd64.deb
     dest: /tmp/couchbase-release-1.0-amd64.deb
 
-- name: Install Couchbase repository package
+- name: Ensure Couchbase repository package is installed
   become: true
-  command: dpkg -i /tmp/couchbase-release-1.0-amd64.deb
+  apt:
+    deb: /tmp/couchbase-release-1.0-amd64.deb
+    state: present
+  register: couchbase_repo_install_result
 
 - name: Update APT cache
   become: true
   apt:
     update_cache: yes
+  changed_when: couchbase_repo_install_result.changed
 
 - name: Print available Couchbase versions
   become: true
   shell: apt list -a couchbase-server
   register: couchbase_versions
-  when: inventory_hostname == groups['couchbase_servers'][0]
   run_once: true
+  delegate_to: "{{ play_hosts[0] }}"
+  changed_when: false
 
 - name: Display Couchbase versions
   debug:
     var: couchbase_versions.stdout
+  run_once: true
+  delegate_to: "{{ play_hosts[0] }}"
 
 - name: Install Couchbase server package
   become: true
-  shell: apt-get install -y "couchbase-server={{ couchbase_version }}"
+  apt:
+    name: "couchbase-server={{ couchbase_version }}"
+    state: present
 
 - name: Wait for couchbase to be ready
   wait_for:

@@ -1,0 +1,13 @@
+- name: Grant query_manage_index permissions to Administrator for each bucket
+  uri:
+    url: "http://{{ play_hosts[0] }}:8091/settings/rbac/users/local/Administrator"
+    method: PUT
+    user: Administrator
+    password: "{{ admin_pw }}"
+    body:
+      roles: "query_manage_index['*.*.*']"
+    body_format: form-urlencoded
+    status_code: 200
+    validate_certs: no # Add this line only if your server's certificate is not trusted
+  delegate_to: "{{ play_hosts[0] }}"
+  with_items: "{{ couchbase_buckets }}"

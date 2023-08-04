@@ -10,6 +10,8 @@
     # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
     couchbase_version: 7.2.0-5325-1
     admin_pw: Changeit
+    memory_quota: 1024
+    index_memory_quota: 256
     node_services:
       node1.example.com: "data,query,index"  # Services to be installed on server 1
       node2.example.com: "data,query,index"  # Services to be installed on server 2
@@ -24,11 +26,31 @@
       storage_mode: plasma
       replicas: 2
 
-    # Define dynamic lists of users, buckets, and collections
-    couchbase_users:
-      - username: testing_ansible 
-        password: testing1234
-        roles: admin
+    #Don't add defer build to the query, the ansible task does that for us. 
+    indexes:
+      - bucket: "beyond"
+        query: "CREATE INDEX `corr_id` ON `beyond`.`pnl`.`daily`(`corr_id`)"
+      - bucket: "beyond"
+        query: "CREATE INDEX `doc_type` ON `beyond`.`pnl`.`daily`(`doc_type`)"
+      - bucket: "beyond"
+        query: "CREATE INDEX `display_name` ON `beyond`.`user`.`permissions`(`display_name`)"
+      - bucket: "beyond"
+        query: "CREATE INDEX `job_type` ON `beyond`.`system`.`cachelogs`(`display_name`)"
+      - bucket: "beyond"
+        query: >
+          CREATE INDEX `sub_type_product_trade_date_to_number_daily_pnl_doc_type` 
+          ON `beyond`.`pnl`.`daily`(`sub_type`,`product`,`trade_date`,`daily_pnl`)
+      - bucket: "beyond"
+        query: >
+          CREATE INDEX `trade_year_trade_date_doc_type` 
+          ON `beyond`.`pnl`.`daily`(`trade_year`,`trade_date`) 
+          WHERE (`doc_type` = 'invoiced-pnl')
+      - bucket: "beyond"
+        query: >
+          CREATE INDEX `doc_type_sub_type_trade_year` 
+          ON `beyond`.`pnl`.`daily`(`doc_type`, `sub_type`, `trade_year`) 
+          PARTITION BY HASH (doc_type, sub_type, trade_year)
+
 
     couchbase_buckets:
       - name: beyond
@@ -66,8 +88,5 @@
             history: "false"
 
   roles:
-    - couchbase_server_prep
-    - couchbase_server_install
-    - couchbase_server_cluster_init
-    - couchbase_bucket_setup
+    - couchbase_index_creation
 

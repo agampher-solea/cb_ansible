@@ -1,6 +1,6 @@
 # roles/couchbase_cluster/tasks/configure_couchbase_cluster.yml
 
-- name: Initialize Couchbase cluster on node1
+- name: Initialize Couchbase cluster
   command: >
       /opt/couchbase/bin/couchbase-cli cluster-init 
         --cluster={{ inventory_hostname }} 
@@ -10,17 +10,7 @@
         --cluster-ramsize={{ cluster_ramsize | default('1024') }} 
         --cluster-index-ramsize={{ cluster_index_ramsize | default('256') }} 
         --index-storage-setting=memopt 
-  when: inventory_hostname == groups['couchbase_servers'][0]
+  delegate_to: "{{ play_hosts[0] }}"
+  run_once: true
   register: cluster_init_result
   failed_when: "cluster_init_result.rc == 1 and 'ERROR: Cluster is already initialized, use setting-cluster to change settings' not in cluster_init_result.stdout"
-
-
-- name: Kick off rebalance on master node
-  command: >
-      /opt/couchbase/bin/couchbase-cli rebalance
-        --cluster={{ inventory_hostname }}
-        --username=Administrator
-        --password={{ admin_pw }}
-  when: inventory_hostname == groups['couchbase_servers'][0]
-  register: cluster_rebalance_result
-  #failed_when: "cluster_rebalance_result.rc == 1 and 'ERROR: Cluster is already initialized, use setting-cluster to change settings' not in cluster_rebalance_result.stdout"
