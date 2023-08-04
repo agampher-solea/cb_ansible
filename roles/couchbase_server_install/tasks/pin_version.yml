@@ -1,0 +1,7 @@
+- name: Prevent accidental upgrade
+  copy:
+    dest: /etc/apt/preferences.d/my_preferences
+    content: |
+      Package: couchbase-server
+      Pin: version couchbase_version
+      Pin-Priority: 1001
