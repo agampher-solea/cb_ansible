@@ -7,7 +7,9 @@
     --password={{ admin_pw }}
   register: server_list_result
   changed_when: false
-  ignore_errors: yes
+  failed_when: >
+    server_list_result.rc != 0 and
+    "ERROR: unknown pool" not in server_list_result.stdout
 
 - name: Couchbase CLI node-init -- Pre cluster-init
   command: >
@@ -16,7 +18,7 @@
       --username=Administrator
       --password={{ admin_pw }}
       --node-init-hostname={{ inventory_hostname }}
-      {% set services = node_services[inventory_hostname].split(',') %}
+      {% set services = node_services[inventory_hostname]|default('')|split(',') %}
       {% if 'index' in services %}
       --node-init-index-path={{ node_service_paths['index']|trim }}
       {% endif %}

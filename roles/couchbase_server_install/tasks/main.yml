@@ -1,2 +1,4 @@
 - name: Install Couchbase Server
   include_tasks: install.yml
+- name: Pin Couchbase Server Version
+  include_tasks: pin_version.yml

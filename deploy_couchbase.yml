@@ -14,9 +14,10 @@
       node1.example.com: "data,query,index"  # Services to be installed on server 1
       node2.example.com: "data,query,index"  # Services to be installed on server 2
       node3.example.com: "data,query,index"  # Services to be installed on server 3
+      node4.example.com: "data,query,index"  # Services to be installed on server 4
     node_service_paths:
-      data: "/opt/couchbase/var/data"
-      index: "/opt/couchbase/var/index"
+      data: "/opt/couchbase/var/data" # This is where the data path will be set if the node is defined to have the data service in the node services block
+      index: "/opt/couchbase/var/index" # This is where the index path will be set if the node is defined to have the index service in the node services block
     cluster_ramsize: 1024  # Cluster RAM size in MB (can be overridden)
     cluster_index_ramsize: 256  # Cluster Index RAM size in MB (can be overridden)
 
