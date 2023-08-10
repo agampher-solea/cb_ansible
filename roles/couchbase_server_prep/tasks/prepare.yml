@@ -69,5 +69,5 @@
   with_items:
     - { limit_type: 'soft', limit_item: 'core' }
     - { limit_type: 'hard', limit_item: 'core' }
-    - { limit_type: 'soft', limit_item: 'core' }
-    - { limit_type: 'hard', limit_item: 'core' }
+    - { limit_type: 'soft', limit_item: 'memlock' }
+    - { limit_type: 'hard', limit_item: 'memlock' }
