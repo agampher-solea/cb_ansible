@@ -6,6 +6,8 @@
   include_tasks: init_cluster.yml
 - name: Initialize Cluster First time -- add_servers
   include_tasks: add_servers.yml
+- name: Initialize Cluster First time -- add_users
+  include_tasks: add_users.yml
 - name: Initialize Cluster First time -- rebalance
   include_tasks: rebalance.yml
 - name: Initialize Cluster First time -- set memory quotas

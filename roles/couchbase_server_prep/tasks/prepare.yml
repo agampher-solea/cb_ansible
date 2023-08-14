@@ -15,7 +15,7 @@
     value: '0'
     state: present
     sysctl_file: /etc/sysctl.conf
-    reload: yes
+    reload: true
   become: true
 
 - name: Create a systemd service to disable THP
@@ -32,20 +32,20 @@
       [Install]
       WantedBy=multi-user.target
     mode: '0644'
-    force: no #This will prevent this task from showing as changed if we are not - in fact - changing anything
+    force: false # This will prevent this task from showing as changed if we are not - in fact - changing anything
   become: true
   register: disable_thp_result
 
 - name: Reload systemd manager configuration
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
   become: true
   changed_when: disable_thp_result.changed
 
 - name: Enable and start the service
   systemd:
     name: disable-thp
-    enabled: yes
+    enabled: true
     state: started
   become: true
   changed_when: disable_thp_result.changed
@@ -59,7 +59,15 @@
   with_items:
     - { limit_type: 'soft', limit_item: 'nofile' }
     - { limit_type: 'hard', limit_item: 'nofile' }
-    - { limit_type: 'soft', limit_item: 'nproc' }
-    - { limit_type: 'hard', limit_item: 'nproc' }
-  become: yes
-  run_once: true
+
+- name: Set ulimits for Couchbase
+  pam_limits:
+    domain: couchbase
+    limit_type: "{{ item.limit_type }}"
+    limit_item: "{{ item.limit_item }}"
+    value: unlimited
+  with_items:
+    - { limit_type: 'soft', limit_item: 'core' }
+    - { limit_type: 'hard', limit_item: 'core' }
+    - { limit_type: 'soft', limit_item: 'memlock' }
+    - { limit_type: 'hard', limit_item: 'memlock' }

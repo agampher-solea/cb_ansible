@@ -7,7 +7,7 @@
 
 
   vars:
-    # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here. 
+    # If you want to specify a specific build, you will need to locate the build version by uncommenting some lines in the 02_install task and use that specifier here.
     couchbase_version: 7.2.0-5325-1
     admin_pw: Changeit
     node_services:
@@ -24,18 +24,24 @@
       storage_mode: plasma
       replicas: 2
 
+    memory_quota: 8196
+    index_memory_quota: 6777
+
     # Define dynamic lists of users, buckets, and collections
-    couchbase_users:
-      - username: testing_ansible 
-        password: testing1234
-        roles: admin
+    couchbase_user_list:
+      - username: testuser1
+        password: ChangeMe1
+        role: ro_admin
+      - username: testuser2
+        password: ChangeMe2
+        role: ro_admin
 
     couchbase_buckets:
       - name: beyond
         memory_quota: 1024
         storage_backend: magma
         bucket_type: couchbase
-        bucket_ramsize: 500
+        # bucket_ramsize: 500 # unused?
         bucket_replica: 2
         compression_mode: "active"
         bucket_priority: high
@@ -70,4 +76,3 @@
     - couchbase_server_install
     - couchbase_server_cluster_init
     - couchbase_bucket_setup
-
