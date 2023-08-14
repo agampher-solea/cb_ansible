@@ -1,2 +1,4 @@
 - name: Create indexes
   include_tasks: create_indexes.yml
+- name: Build indexes
+  include_tasks: build_indexes.yml

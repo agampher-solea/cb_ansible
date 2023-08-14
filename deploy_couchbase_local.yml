@@ -25,6 +25,17 @@
     index_settings:
       storage_mode: plasma
       replicas: 2
+    couchbase_user_list:
+      - username: testuser1
+        password: ChangeMe1
+        role: ro_admin
+      - username: testuser2
+        password: ChangeMe2
+        role: ro_admin
+      - username: index_manager
+        password: ChangeMe3
+        role: "query_manage_index[*]"
+
 
     #Don't add defer build to the query, the ansible task does that for us. 
     indexes:
@@ -88,5 +99,9 @@
             history: "false"
 
   roles:
-    - couchbase_index_creation
-
+    - couchbase_server_prep
+    - couchbase_server_install
+    - couchbase_server_cluster_init
+    - couchbase_bucket_setup
+    - couchbase_user_setup
+   

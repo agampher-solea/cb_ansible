@@ -35,6 +35,9 @@
       - username: testuser2
         password: ChangeMe2
         role: ro_admin
+      - username: index_manager
+        password: ChangeMe3
+        role: "query_manage_index[*]"
 
     couchbase_buckets:
       - name: beyond
@@ -72,7 +75,4 @@
             history: "false"
 
   roles:
-    - couchbase_server_prep
-    - couchbase_server_install
-    - couchbase_server_cluster_init
-    - couchbase_bucket_setup
+    - couchbase_index_creation

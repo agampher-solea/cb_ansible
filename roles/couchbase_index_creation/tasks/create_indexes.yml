@@ -1,21 +1,32 @@
----
-- name: Create Indexes
+- name: Create Deferred Query Indexes using REST API
+  vars:
+    modified_query: >
+      {% if ' WITH ' not in item.query %}
+        {{ item.query }} WITH {"defer_build":true}
+      {% elif '\"defer_build\":true' not in item.query %}
+        {{ item.query | regex_replace(' WITH {', ' WITH {\"defer_build\":true, ') }}
+      {% else %}
+        {{ item.query }}
+      {% endif %}
   uri:
     url: "http://{{ play_hosts[0] }}:8093/query/service"
     method: POST
-    user: Administrator
-    password: "{{ admin_pw }}"
     headers:
       Content-Type: "application/json"
     body_format: json
     body:
-      statement: "{{ item.query }} WITH { \"defer_build\":true }"
+      statement: "{{ modified_query }}"
+      readonly: false
+      creds:
+        - user: "{{ index_manager_user }}"
+          pass: "{{ index_manager_pw }}"
+    status_code:
+      - 200
+      - 409
+    validate_certs: no  # use this only if you're skipping certificate validation
+  loop: "{{ indexes }}"
   delegate_to: "{{ play_hosts[0] }}"
   run_once: true
-  loop: "{{ indexes }}"
-  register: index_creation_results
-
-- name: debug 
-  debug:
-    var: index_creation_results
-
+  register: response
+  failed_when: 
+    - "'errors' in response.json and response.status != 409"
