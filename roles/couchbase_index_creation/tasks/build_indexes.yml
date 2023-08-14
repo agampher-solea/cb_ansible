@@ -1,0 +1,51 @@
+- name: Group indexes by bucket, scope, and collection
+  set_fact:
+    indexes_grouped: >-
+      {{
+        indexes_grouped | default({}) | combine({
+          ('`'+bucket+'`'+'.'+'`'+scope+'`'+'.'+'`'+collection+'`'): 
+          (indexes_grouped[('`'+bucket+'`'+'.'+'`'+scope+'`'+'.'+'`'+collection+'`')] | default([])) + ['`'+index_name+'`']
+        })
+      }}
+  vars:
+    index_name: "{{ item.query | regex_findall('CREATE INDEX\\s+`([^`]+)`\\s+ON') | first }}"
+    bucket_scope_collection: "{{ item.query | regex_findall('ON\\s+`([^`]+)`\\.`([^`]+)`\\.`([^`]+)') | first }}"
+    bucket: "{{ bucket_scope_collection.split(',')[0] | trim(' \"()') | replace('''', '') | replace(\"'\", '') }}"
+    scope: "{{ bucket_scope_collection.split(',')[1] | trim(' \"()') | replace('''', '') | replace(\"'\", '') }}"
+    collection: "{{ bucket_scope_collection.split(',')[2] | trim(' \"()') | replace('''', '') | replace(\"'\", '') }}"
+  loop: "{{ indexes }}"
+  delegate_to: "{{ play_hosts[0] }}"
+  run_once: true
+
+
+# - name: Build the index query
+#   debug:
+#     msg: "BUILD INDEX ON {{ item.0 }} ({{ item.1 | join(', ') }}) USING GSI"
+#   loop: "{{ indexes_grouped.items() | list }}"
+
+
+- name: Build Deferred Indexes
+  vars:
+    index_name: "{{ item.query | regex_findall('CREATE INDEX\\s+`([^`]+)`\\s+ON') | first }}"
+    bucket_scope_collection: "{{ item.query | regex_findall('ON\\s+`([^`]+)`\\.`([^`]+)`\\.`([^`]+)') | first }}"
+    bucket: "{{ bucket_scope_collection.split(',')[0] | trim(' \"()') }}"
+    scope: "{{ bucket_scope_collection.split(',')[1] | trim(' \"()') }}"
+    collection: "{{ bucket_scope_collection.split(',')[2] | trim(' \"()') }}"
+  uri:
+    url: "http://{{ play_hosts[0] }}:8093/query/service"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    body_format: json
+    validate_certs: no  # use this only if you're skipping certificate validation
+    body: 
+      statement: "BUILD INDEX ON {{ item.0 }} ({{ item.1 | join(', ') }}) USING GSI"
+      creds:
+        - user: "{{ index_manager_user }}"
+          pass: "{{ index_manager_pw }}"
+  loop: "{{ indexes_grouped.items() | list }}"
+  delegate_to: "{{ play_hosts[0] }}"
+  run_once: true
+  register: build_response
+  failed_when: 
+    - "'errors' in build_response.json"

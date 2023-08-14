@@ -1,0 +1,40 @@
+# deploy_couchbase.yml
+
+- name: Deploy Couchbase Indexes
+  hosts: couchbase_servers  # Replace with the appropriate host/group name from your inventory
+  gather_facts: true
+  become: true
+
+
+  vars:
+    index_manager_user: index_manager
+    index_manager_pw: ChangeMe3
+
+
+    #Don't add defer build to the query, the ansible task does that for us.
+    #These must be defined in a single line, the fixes for yaml blocks are all less desireable than just defining the index in a single line.  
+    indexes:
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `corr_id` ON `beyond`.`pnl`.`daily`(`corr_id`) USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `doc_type` ON `beyond`.`pnl`.`daily`(`doc_type`) USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `display_name` ON `beyond`.`user`.`permissions`(`display_name`) USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `job_type` ON `beyond`.`system`.`cachelogs`(`display_name`) USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `sub_type_product_trade_date_to_number_daily_pnl_doc_type` ON `beyond`.`pnl`.`daily`(`sub_type`,`product`,`trade_date`,`daily_pnl`) USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `trade_year_trade_date_doc_type` ON `beyond`.`pnl`.`daily`(`trade_year`,`trade_date`) WHERE (`doc_type` = ''invoiced-pnl'') USING GSI '
+        
+      - bucket: 'beyond'
+        query: 'CREATE INDEX `doc_type_sub_type_trade_year` ON `beyond`.`pnl`.`daily`(`doc_type`, `sub_type`, `trade_year`) PARTITION BY HASH (doc_type, sub_type, trade_year) USING GSI '
+
+  roles:
+    - couchbase_index_creation
+   
